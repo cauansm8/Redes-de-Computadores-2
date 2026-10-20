@@ -135,22 +135,31 @@ def paridade_bidimensional():
     entrada = input("Digite uma string binária (exemplo 10101010): ")
 
     if verificando_entrada(entrada):
-        
+
         matriz = calcular_tamanho_matriz(entrada)
-        
+
         paridade = input("Paridade par (0) ou impar (1): ")
 
         if verificando_entrada_de_paridade(paridade):
-            mostrar_paridades(matriz, paridade)
+            # EMISSOR: calcula e guarda as paridades que serão transmitidas
+            print("\n=== EMISSOR: matriz e paridades transmitidas ===")
+            p_linhas_orig, p_colunas_orig = mostrar_paridades(matriz, paridade)
+
             r = inserir_erro_paridade_bidimensional(matriz)
 
-            # se teve entrada inválida, finaliza o programa
+            # se teve entrada inválida, finaliza
             if r == False:
                 return
 
-            receptor_detectando_falha_paridade_bidimensional(matriz, paridade)
+            # RECEPTOR: compara com as paridades originais
+            print("\n=== RECEPTOR: matriz recebida (com ruído) ===")
+            receptor_detectando_falha_paridade_bidimensional(
+                matriz, paridade, p_linhas_orig, p_colunas_orig
+            )
+
+            print("\n=== Matriz restaurada ===")
             mostrar_paridades(matriz, paridade)
-            
+
         else:
             print("\nEntrada inválida, retornando para o menu\n")
             return
@@ -158,6 +167,56 @@ def paridade_bidimensional():
     else:
         print("\nEntrada inválida, retornando para o menu\n")
         return
+
+
+
+
+# detectando falha de paridade bidimensional e corrigindo
+def receptor_detectando_falha_paridade_bidimensional(matriz, paridade, p_linhas_orig, p_colunas_orig):
+
+    # paridades recalculadas sobre a matriz recebida
+    p_linhas, p_colunas = mostrar_paridades(matriz, paridade)
+
+    input("Pressione Enter para que o receptor detecte e corrija o erro...")
+
+    # encontra as diferenças de paridades na linha
+    linhas_com_erro = []
+    for i in range(len(p_linhas)):
+        
+        if p_linhas[i] != p_linhas_orig[i]:
+            
+            linhas_com_erro.append(i)
+
+    # encontra as diferenças de paridades na coluna
+    colunas_com_erro = []
+    for j in range(len(p_colunas)):
+        
+        if p_colunas[j] != p_colunas_orig[j]:
+            
+            colunas_com_erro.append(j)
+
+    # se um erro de paridade nas linhas e colunas -> procura pelo erro
+    if len(linhas_com_erro) == 1 and len(colunas_com_erro) == 1:
+        i = linhas_com_erro[0]
+        j = colunas_com_erro[0]
+
+        print(f"Erro detectado na Linha {i+1}, Coluna {j+1}")
+
+        if matriz[i, j] == 0:
+            matriz[i, j] = 1
+        else:
+            matriz[i, j] = 0
+
+        print("(Erro corrigido)")
+
+    # nn tem erro
+    elif len(linhas_com_erro) == 0 and len(colunas_com_erro) == 0:
+        print("Nenhum erro detectado.")
+
+
+    # tem dois ou mais erros (nn dá para corrigir)
+    else:
+        print("Erro detectado, mas não é possível corrigir (mais de 1 bit com erro).")
 
 
 # serve para calcular a quantidade de linhas
@@ -280,27 +339,6 @@ def inserir_erro_paridade_bidimensional(matriz):
         print("\nEntrada inválida, retornando para o menu\n")
         return False
 
-# detectando falha de paridade bidimensional e corrigindo
-def receptor_detectando_falha_paridade_bidimensional(matriz, paridade):
-    
-    p_linhas, p_colunas = mostrar_paridades(matriz, paridade)
-
-    input("Pressione Enter para que o receptor detecte e corrija o erro...")
-
-
-    for i in range (len(p_linhas)):
-        for j in range (len(p_colunas)):
-            if p_linhas[i] == 1 and p_colunas[j] == 1:
-                if matriz[i, j] == 0:
-                    matriz[i, j] = 1
-                else:
-                    matriz[i, j] = 0
-
-                print("(Erro corrigido)")
-
-                return
-
-
 # crc
 def CRC():
     entrada = input("Digite a string de dados (exemplo 1011): ")
@@ -318,7 +356,7 @@ def CRC():
 
         print("------------------------------------")
         print(f"Dados originais: {entrada}")
-        print(f"Polinômio: {"".join(polinomio)}")
+        print(f"Polinômio: {''.join(polinomio)}")
         print(f"Resto: {resto}")
         print(f"Mensagem transmitida: {mensagem}")
         print("------------------------------------")
@@ -395,7 +433,7 @@ def receptor_CRC(mensagem, polinomio):
 
     print("------------------------------------")
     print(f"Mensagem recebida: {mensagem}")
-    print(f"Polinômio: {"".join(polinomio)}")
+    print(f"Polinômio: {''.join(polinomio)}")
     print(f"Resto: {resto_receptor}")
     print("------------------------------------")
 
